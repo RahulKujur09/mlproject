@@ -4,4 +4,7 @@ numpy
 matplotlib
 seaborn
 scikit-learn
--e .
+catboost
+xgboost
+prettytable
+#-e .
