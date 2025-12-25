@@ -29,45 +29,51 @@ class ModelTrainer:
 
     def initiate_model_trainer(self, train_array, test_array):
         try:
-            logging.info("spliting training and test input data")
+            logging.info("Splitting training and test input data")
+
             X_train, y_train, X_test, y_test = (
-                train_array[:,:-1],
-                train_array[:,-1],
-                test_array[:,:-1],
-                test_array[:,-1]
+                train_array[:, :-1],
+                train_array[:, -1],
+                test_array[:, :-1],
+                test_array[:, -1]
             )
+
             models = {
-                "cat_boost_regressor" : CatBoostRegressor(),
-                "random_forest_regressor" : RandomForestRegressor(),
-                "ada_bost_regressor" : AdaBoostRegressor(),
-                "gradient_boosting_regressoe" : GradientBoostingRegressor(),
-                "linear_regression" : LinearRegression(),
-                "lasso" : Lasso(),
-                "ridge" : Ridge(),
-                "xg_boost_regressor" : XGBRegressor(),
-                "decision_tree_regressor" : DecisionTreeRegressor()
+                "cat_boost_regressor": CatBoostRegressor(verbose=False),
+                "random_forest_regressor": RandomForestRegressor(),
+                "ada_bost_regressor": AdaBoostRegressor(),
+                "gradient_boosting_regressoe": GradientBoostingRegressor(),
+                "linear_regression": LinearRegression(),
+                "lasso": Lasso(),
+                "ridge": Ridge(),
+                "xg_boost_regressor": XGBRegressor(objective="reg:squarederror"),
+                "decision_tree_regressor": DecisionTreeRegressor()
             }
 
-            model_report = evaluate_model(X_train = X_train, y_train=y_train, X_test=X_test, y_test=y_test, models = models)
-
-            best_model_score = model_report["R2 Score"].nlargest(1).iloc[0]
+            model_report = evaluate_model(
+                X_train=X_train,
+                y_train=y_train,
+                X_test=X_test,
+                y_test=y_test,
+                models=models
+            )
 
             best_model_index = model_report["R2 Score"].idxmax()
-            best_model_name = str(model_report.loc[best_model_index, "Model"])
-            
+            best_model_score = float(model_report.loc[best_model_index, "R2 Score"])
+            best_model_name = str(model_report.at[best_model_index, "Model"])
             best_model = models[best_model_name]
-
 
             if best_model_score < 0.6:
                 raise CustomException("No Best Model found!", sys)
-            logging.info("Best found model on both training and teating dataset")
+
+            logging.info(f"Best model found: {best_model_name} with R2 score {best_model_score}")
 
             save_object(
-                file_path=self.model_trainer_config.train_model_file_path, obj=best_model
+                file_path=self.model_trainer_config.train_model_file_path,
+                obj=best_model
             )
 
             return model_report
-
 
         except Exception as e:
             raise CustomException(e, sys)
